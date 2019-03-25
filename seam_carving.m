@@ -4,7 +4,7 @@ image=imread('castle.jpeg');
 %image=im2double(image);
 %image_gray=rgb2gray(image);
 
-vert_image = removeVertical(image, 100);
+vert_image = removeVertical(image, 10);
 
 % Compute the energy function at each pixel using the magnitude of the 
 %   x and y gradients

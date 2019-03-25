@@ -8,7 +8,7 @@ gray_image = rgb2gray(image);
 %% Compute the energy function at each pixel using the magnitude of the x and y gradients
 [fx, fy] = imgradientxy(gray_image, 'prewitt'); % equivalent to doing dF/dx and dF/dy
 %imshowpair(fx, fy);
-energy_map = sqrt(fx.^2 + fy.^2); 
+energy_map = sqrt((fx.^2 + fy.^2)); 
 %imshow(energy_map);
 %imagesc(energy_map);
 
@@ -35,18 +35,21 @@ end
 %% get min seam in energy map 
 new_image = zeros(size(image));
 new_image(:) = image(:);
-%used = [];
+used = [];
 for i=1:numPixels
     minPx = M(rows, 1);
     minCol = 1;
-    %[minPx, minCol] = min(M(rows,:));
+    %[minPx, minCol] = min(M(rows,:));  %NOT WORKING
     for j=1:cols     % find the min value in last row of M
         if(M(rows, j) < minPx)
-            minPx = (M(rows, j));
-            minCol = j;
+            %minPx = (M(rows, j));
+            %minCol = j;
+            [minPx, minCol] = min(M(rows,:));
+%             if ismember(minCol, used)
+%                 minCol
+%                 continue;
+%             end
             %used = [used, minCol];
-            %[minPx, minCol] = min(M(rows,:));
-            %minCol
             M(rows, minCol) = 1.00;    % take that px out of consideration
         end
     end
