@@ -1,10 +1,10 @@
 
 % Load image and convert to double and grayscale
-image=imread('river.jpg');
-%image=im2double(image);t
+image=imread('tower.jpeg');
+%image=im2double(image);
 %image_gray=rgb2gray(image);
 
-vert_image = removeVertical(image, 20);
+vert_image = removeVertical(image, 100);
 
 % Compute the energy function at each pixel using the magnitude of the 
 %   x and y gradients
