@@ -1,55 +1,56 @@
 % This function removes vertical seams from an image
 
 function output_image = removeVertical(im, numPixels)
-%% Convert image to double and grayscale; add smooth filter
-gray = rgb2gray(im);
+% %% Convert image to double and grayscale; add smooth filter
+% gray = rgb2gray(im);
 image = im2double(im);
-gray_image = rgb2gray(image);
+% gray_image = rgb2gray(image);
+% 
+% % testing Guassian smoothing
+% hsize = 4;
+% sigma = 2;
+% h = fspecial('gaussian', hsize, sigma);
+% %mesh(h); imagesc(h);
+% smooth = imfilter(gray, h);
+% dbsmooth = im2double(smooth);
+% %imshow(dbsmooth);
+% 
+% % testing with convolution filter
+% fx = [-1, 1];
+% fy = [-1; 1];
+% gradx = double(imfilter(gray, fx, "conv", "replicate"));
+% grady = double(imfilter(gray, fy, "conv", "replicate"));
+% %imshowpair(gradx, grady);
+% 
+% 
+% %% Compute the energy function at each pixel using the magnitude of the x and y gradients
+% [gx, gy] = imgradientxy(gray_image);    % equivalent to doing dF/dx and dF/dy
+% %imshowpair(gx, gy); [energy_map, gdir] = imgradient(dbsmooth);   % another way
+% %to get energy map
+% energy_map = sqrt((gx.^2 + gy.^2)); 
+% %energy_map = abs(gx) + abs(gy); imshow(energy_map);
 
-% testing Guassian smoothing
-hsize = 4;
-sigma = 2;
-h = fspecial('gaussian', hsize, sigma);
-%mesh(h);
-%imagesc(h);
-smooth = imfilter(gray, h);
-dbsmooth = im2double(smooth);
-%imshow(dbsmooth);
-
-% testing with convolution filter
-fx = [-1, 1];
-fy = [-1; 1];
-gradx = double(imfilter(gray, fx, "conv", "replicate"));
-grady = double(imfilter(gray, fy, "conv", "replicate"));
-%imshowpair(gradx, grady);
+%% call energy matrix function
+energy_map = energy_matrix(im);
 
 
-%% Compute the energy function at each pixel using the magnitude of the x and y gradients
-[gx, gy] = imgradientxy(gray_image);    % equivalent to doing dF/dx and dF/dy
-%imshowpair(gx, gy);
-%[energy_map, gdir] = imgradient(dbsmooth);   % another way to get energy map
-energy_map = sqrt((gx.^2 + gy.^2)); 
-%energy_map = abs(gx) + abs(gy);
-%imshow(energy_map);
-
-
-%% Create a new matrix to store min energy seams
-[rows, cols] = size(energy_map);
-M = zeros(rows, cols);  % new matrix for cumuluative min energy seams
-M(:) = energy_map(:);
-
-for j=1:cols   % iterate cols
-    for i=2:rows   % iterate rows
-        if j==1
-            M(i, j) = energy_map(i, j) + min([M(i-1, j), M(i-1, j+1)]);
-            continue;
-        elseif j==cols
-            M(i, j) = energy_map(i, j) + min([M(i-1, j-1), M(i-1, j)]);
-            continue;
-        end
-        M(i, j) = energy_map(i, j) + min([M(i-1, j-1), M(i-1, j), M(i-1, j+1)]);
-    end
-end
+%% Create a new matrix (energy map) to store min energy seams
+% [rows, cols] = size(energy_map);
+% M = zeros(rows, cols);  % new matrix for cumuluative energy map
+% M(:) = energy_map(:);
+% 
+% for j=1:cols   % iterate cols
+%     for i=2:rows   % iterate rows
+%         if j==1
+%             M(i, j) = energy_map(i, j) + min([M(i-1, j), M(i-1, j+1)]);
+%             continue;
+%         elseif j==cols
+%             M(i, j) = energy_map(i, j) + min([M(i-1, j-1), M(i-1, j)]);
+%             continue;
+%         end
+%         M(i, j) = energy_map(i, j) + min([M(i-1, j-1), M(i-1, j), M(i-1, j+1)]);
+%     end
+% end
 
 % for i=2:rows
 %    for j=2:cols-1
@@ -66,15 +67,20 @@ end
 %    M(i,1) = energy_map(i,1) + min([M(i-1,1), M(i-1,2)]);
 %    M(i,cols) = energy_map(i,cols) + min([M(i-1,cols), M(i-1,cols-1)]);
 % end
-
 %imshow(M);
+
+%% call energy_map function
+[rows, cols] = size(energy_map);
+M = zeros(rows, cols);
+M = cmin_energy(energy_map);
 
 
 %% get min seam in energy map 
 new_image = zeros(size(image));
-new_image(:) = image(:);
-
+%new_image(:) = image(:);
 for i=1:numPixels   % decrease the image by the given # of pixels
+    [rows, cols, ~] = size(image);
+    cols
 %     minPx = M(rows, 1);
 %     minCol = 1;
 %     for j=1:cols     % find the min value in last row of M
@@ -91,19 +97,19 @@ for i=1:numPixels   % decrease the image by the given # of pixels
     for k=rows-1:-1:1
         if((minCol == 1) && M(k, minCol) <= M(k, minCol+1))
             minCol = minCol;
-            continue;
+            %continue;
         elseif((minCol == 1) && M(k, minCol+1) <= M(k, minCol))
             minCol = minCol+1;
-            continue;
+            %continue;
         elseif(minCol == cols && M(k, minCol) <= M(k, minCol-1))
             minCol = minCol;
-            continue;
+            %continue;
         elseif(minCol == cols && M(k, minCol-1) <= M(k, minCol))
             minCol = minCol-1;
-            continue;
+            %continue;
         elseif(M(k, minCol+1) < M(k, minCol-1) && M(k, minCol+1) < M(k, minCol))  % check if top right px is the minimum one
             minCol = minCol+1;
-            continue;
+            %continue;
         elseif(M(k, minCol-1) < M(k, minCol) && M(k, minCol-1) < M(k, minCol+1)) % check if top left px is min one
             minCol = minCol-1;
         else % top px is the min one
@@ -111,12 +117,37 @@ for i=1:numPixels   % decrease the image by the given # of pixels
         end
         M(k+1, minCol) = 1.0; % remove the min px from top row
         new_image(k+1, minCol) = 1.0;   % remove comment to show seams on image
+        new_image(k, 1:minCol-1, :) = image(k, 1:minCol-1, :); 
+        new_image(k, minCol:cols-1, :) = image(k, minCol:cols-1, :); 
     end
+    % TODO: Call to redo energy matrix w/ new image
+    image = uint8(new_image);
+    energy_map = energy_matrix(image);
+    
+    % TODO: Call to remap cumulative minimum energy map/M matrix [cum min energy] w/ new image
+    M = cmin_energy(energy_map);
 end
 
+% vs = zeros(rows, 1);
+% vs(rows) = 5;
+% 
+% index = vs(rows)+1;
+% index;
+% [~, b] = min([2, 3, 1]);
+% b;
+
+
+subplot(1, 2, 1);
+imshow(energy_map);
+title("old");
+
+subplot(1, 2, 2);
 imshow(new_image);
+title("new");
+    
 
 output_image = new_image;
 
 end
+
 
